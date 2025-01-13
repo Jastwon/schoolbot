@@ -1,0 +1,86 @@
+from sqlalchemy import select
+
+from database import Base, async_engine, async_session_factory
+from models import Users
+
+from asyncio import run
+
+class AsyncORM:
+    @staticmethod
+    async def create_tables():
+        async with async_engine.connect() as conn:
+            await conn.run_sync(Base.metadata.drop_all)
+            await conn.run_sync(Base.metadata.create_all)
+            await conn.commit()
+
+    @staticmethod
+    async def insert_users(user_id: int, username: str, fullname: str, role: str, ref: str):
+        async with async_session_factory() as session:
+            user = Users(user_id=user_id, username=username, fullname = fullname, role=role, ref=ref)
+            session.add(user)
+            await session.flush()
+            await session.commit()
+
+    @staticmethod
+    async def select_users():
+        async with async_session_factory() as session:
+            query = select(Users)
+            res = await session.execute(query)
+            users = res.scalars().all()
+            return users
+
+
+    @staticmethod
+    async def update_username(user_id: int, new_username: str):
+        async with async_session_factory() as session:
+            user = await session.get(Users, user_id)
+            user.username = new_username
+            # await session.refresh(user)
+            await session.commit()
+
+    @staticmethod
+    async def update_role(user_id: int, new_role: str = "teacher"):
+        async with async_session_factory() as session:
+            user = await session.get(Users, user_id)
+            user.role = new_role
+            # await session.refresh(user)
+            await session.commit()
+
+
+    @staticmethod
+    async def get_user_by_id(user_id: int):
+        async with async_session_factory() as session:
+            query = select(Users).where(Users.user_id == user_id)
+            res = await session.execute(query)
+            try:
+                users = res.one()
+                return users[0]
+            except:
+                return None
+
+    @staticmethod
+    async def get_users_by_ref(ref: str):
+        async with async_session_factory() as session:
+            query = select(Users).where(Users.role == "student")
+            res = await session.execute(query)
+            all_students = res.scalars().all()
+            students = list()
+            for student in all_students:
+                if ref in student.ref:
+                    students.append(student)
+
+            return students
+
+    @staticmethod
+    async def get_user_by_username(username: str):
+        async with async_session_factory() as session:
+            query = select(Users).where(Users.username == username)
+            res = await session.execute(query)
+            user = res.one()[0]
+            return user
+
+
+
+
+
+
