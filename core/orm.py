@@ -79,6 +79,22 @@ class AsyncORM:
             user = res.one()[0]
             return user
 
+    @staticmethod
+    async def add_ref(user_id:int, teacher_id: str):
+        async with async_session_factory() as session:
+            user = await session.get(Users, user_id)
+            if not(teacher_id in user.ref):
+                user.ref += f"{teacher_id} "
+            await session.commit()
+
+    @staticmethod
+    async def delete_ref(user_id:int, teacher_id: str):
+        async with async_session_factory() as session:
+            user = await session.get(Users, user_id)
+            user.ref = user.ref.replace(f"{teacher_id}", "")
+            print(user.ref)
+            await session.commit()
+
 
 
 

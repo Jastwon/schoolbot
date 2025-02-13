@@ -1,6 +1,6 @@
 from gettext import textdomain
 
-from config import TOKEN, ADMIN
+from config import *
 import logging
 
 from aiogram.utils.executor import start_polling
@@ -11,7 +11,7 @@ from aiogram.utils.deep_linking import get_start_link
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
 
-from keyboards import input_again, admin_menu, back, mng_user, teacher_menu
+from keyboards import *
 from states import Fullname, ManageUser
 
 from datetime import datetime
@@ -35,7 +35,9 @@ disp = Dispatcher(bot, storage=memory)
 async def start(message: Message):
     global args
     args = message.get_args()
-    await AsyncORM.create_tables()
+
+
+    # await AsyncORM.create_tables()
 
     user = await AsyncORM.get_user_by_id(message.from_user.id)
     if user == None:
@@ -44,6 +46,10 @@ async def start(message: Message):
     else:
         if user.username != message.from_user.username:
             await AsyncORM.update_username(message.from_user.id, message.from_user.username)
+        if args != "" and args != str(message.from_user.id):
+            await AsyncORM.add_ref(message.from_user.id, args)
+            await bot.send_message(int(args), "У вас новый ученик")
+
         if user.role == "student":
             await bot.send_message(message.from_user.id, "меню")
         else:
@@ -58,13 +64,38 @@ async def admin(msg: Message):
 
 @disp.message_handler()
 async def messages(message: Message):
+    global msgg
+
+
     if message.text == "Рассылка" and message.from_user.id in ADMIN:
         await bot.send_message(message.from_user.id, "Рассылка")
     elif message.text == "Управление пользователем" and message.from_user.id in ADMIN:
-        await bot.send_message(message.from_user.id, "Введите юзернейм пользователя", reply_markup=back())
+        await bot.send_message(message.from_user.id, "Введите юзернейм пользователя")
         await ManageUser.user.set()
-    elif message.text == "Управление пользователем" and message.from_user.id in ADMIN:
+    elif message.text == "Статистика" and message.from_user.id in ADMIN:
         await bot.send_message(message.from_user.id, "Статистика")
+        users = await AsyncORM.select_users()
+        for user in users:
+            print(user.ref)
+
+    user = await AsyncORM.get_user_by_id(message.from_user.id)
+    if user.role == "teacher":
+        if message.text == "Мои ученики":
+            students = await AsyncORM.get_users_by_ref(str(message.from_user.id))
+            if students == []:
+                await bot.send_message(message.from_user.id, "У вас нет учеников")
+
+            else:
+                for student in students:
+                    msgg = await bot.send_message(message.from_user.id, f"{student.fullname}\nТелеграм: @{student.username}", reply_markup=my_students(student.user_id))
+        elif message.text == "Моя ссылка":
+            await bot.send_message(message.from_user.id, f"Отправьте ссылку ученику\n`{await get_start_link(str(message.from_user.id))}`", parse_mode="MARKDOWN")
+    else:
+        if message.text == "Мои учителя":
+            teachers = user.ref.split()
+            await bot.send_message(message.from_user.id, "Выбирете учителя", reply_markup=teachers_btn(teachers))
+
+
 
 
 
@@ -95,21 +126,20 @@ async def second_name(message: Message, state: FSMContext):
 async def manage_user(msg: Message, state: FSMContext):
     global user_data
 
-    if msg.text == "Отмена":
-        await bot.send_message(msg.from_user.id, "Админ меню", reply_markup=admin_menu())
+    user = ""
+    try:
+        user = await AsyncORM.get_user_by_username(msg.text)
+
+        user_data = await bot.send_message(msg.from_user.id, f"Пользователь: @{user.username}\nИмя: {user.fullname}\nРоль: {user.role}", reply_markup=mng_user(user.user_id))
         await state.finish()
-    else:
-        user = ""
-        try:
-            user = await AsyncORM.get_user_by_username(msg.text)
 
-            user_data = await bot.send_message(msg.from_user.id, f"Пользователь: @{user.username}\nИмя: {user.fullname}\nРоль: {user.role}", reply_markup=mng_user(user.user_id))
-            await state.finish()
-
-        except:
-            await bot.send_message(msg.from_user.id, "Пользователь не найден")
+    except:
+        await bot.send_message(msg.from_user.id, "Пользователь не найден")
 
 
+
+
+@disp.callback_query_handler(lambda call: call.data.startswith("myteacher_"))
 
 
 @disp.callback_query_handler(lambda call: call.data.startswith("changerole_"))
@@ -132,6 +162,18 @@ async def mng(call: CallbackQuery):
             await bot.send_message(user_id, "ваша роль изменена на student")
 
 
+@disp.callback_query_handler(lambda call: call.data.startswith("mystudent_"))
+async def mystd(call: CallbackQuery):
+    pass
+
+@disp.callback_query_handler(lambda call: call.data.startswith("deletestudent_"))
+async def delete_student(call: CallbackQuery):
+    student_id = call.data.split("_")[1]
+    await AsyncORM.delete_ref(int(student_id), str(call.from_user.id))
+    await bot.delete_message(call.from_user.id, msgg.message_id)
+    await bot.send_message(call.from_user.id, "Ученик удален")
+
+
 
 
 
@@ -148,7 +190,8 @@ async def again(call: CallbackQuery):
 
 @disp.callback_query_handler(text="next")
 async def next(call: CallbackQuery):
-    await AsyncORM.insert_users(call.from_user.id, call.from_user.username, first_n + " " + second_n, "student", args)
+    await AsyncORM.insert_users(call.from_user.id, call.from_user.username, first_n + " " + second_n, "student", f"{args} ")
+    await bot.send_message(int(args), "У вас новый ученик")
     await bot.send_message(call.from_user.id, "меню")
 
 
