@@ -1,9 +1,8 @@
 from sqlalchemy import select
 
-from database import Base, async_engine, async_session_factory
-from models import Users
+from bot.database import Base, async_engine, async_session_factory
+from bot.models import Users
 
-from asyncio import run
 
 class AsyncORM:
     @staticmethod
