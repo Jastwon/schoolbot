@@ -1,6 +1,8 @@
-from fastapi import FastAPI, Security, HTTPException, status, Depends
+from fastapi import FastAPI, Security, HTTPException, status, Depends, Request
 from fastapi.security import APIKeyHeader
-from pydantic import BaseModel
+from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import HTMLResponse
 
 from bot.core.orm import AsyncORM
 from .schemas.models import GetUsers
@@ -12,7 +14,11 @@ from bot.config import TOKEN_MYAPI
 
 app = FastAPI()
 
-API_KEY_NAME = "x-api-key"
+
+app.mount("/static", StaticFiles(directory="web/static"), name="static")
+templates = Jinja2Templates(directory="web/templates")
+
+API_KEY_NAME = "api-key"
 api_key_scheme = APIKeyHeader(name=API_KEY_NAME, auto_error=False)
 
 async def validate_api_key(api_key: str = Security(api_key_scheme)):
@@ -25,12 +31,15 @@ async def validate_api_key(api_key: str = Security(api_key_scheme)):
 
 
 
-class Test(BaseModel):
-    key: str
 
-@app.post("/users", response_model=list[GetUsers])
-async def get_users(testt: Test, api_key: str = Depends(validate_api_key)):
+@app.get("/users", response_model=list[GetUsers])
+async def get_users(api_key: str = Depends(validate_api_key)):
     return await AsyncORM.select_users()
+
+@app.get("/admin", response_class=HTMLResponse)
+async def admin(request: Request):
+    return templates.TemplateResponse("get_users.html", {"request": request})
+
 
 
 
