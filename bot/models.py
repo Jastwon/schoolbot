@@ -1,6 +1,10 @@
 from sqlalchemy import Integer, String
 
+<<<<<<< HEAD
 from .database import Base
+=======
+from bot.database import Base
+>>>>>>> fa75e18 (Сделал запуск тг бота и веб апп из одного файла)
 from sqlalchemy.orm import Mapped, mapped_column
 
 

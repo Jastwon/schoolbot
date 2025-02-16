@@ -1,6 +1,10 @@
 from gettext import textdomain
 
+<<<<<<< HEAD
 from config import *
+=======
+from bot.config import *
+>>>>>>> fa75e18 (Сделал запуск тг бота и веб апп из одного файла)
 import logging
 
 from aiogram.utils.executor import start_polling
@@ -11,12 +15,21 @@ from aiogram.utils.deep_linking import get_start_link
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
 
+<<<<<<< HEAD
 from keyboards import *
 from states import Fullname, ManageUser
 
 from datetime import datetime
 
 from core.orm import AsyncORM
+=======
+from bot.keyboards import *
+from bot.states import Fullname, ManageUser
+
+from datetime import datetime
+
+from bot.core.orm import AsyncORM
+>>>>>>> fa75e18 (Сделал запуск тг бота и веб апп из одного файла)
 
 
 
@@ -178,7 +191,10 @@ async def delete_student(call: CallbackQuery):
 
 
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> fa75e18 (Сделал запуск тг бота и веб апп из одного файла)
 @disp.callback_query_handler(text="again")
 async def again(call: CallbackQuery):
     global msg_true
@@ -191,7 +207,12 @@ async def again(call: CallbackQuery):
 @disp.callback_query_handler(text="next")
 async def next(call: CallbackQuery):
     await AsyncORM.insert_users(call.from_user.id, call.from_user.username, first_n + " " + second_n, "student", f"{args} ")
+<<<<<<< HEAD
     await bot.send_message(int(args), "У вас новый ученик")
+=======
+    if args != "":
+        await bot.send_message(int(args), "У вас новый ученик")
+>>>>>>> fa75e18 (Сделал запуск тг бота и веб апп из одного файла)
     await bot.send_message(call.from_user.id, "меню")
 
 
@@ -218,5 +239,9 @@ async def next(call: CallbackQuery):
 
 
 
+<<<<<<< HEAD
 if __name__ == "__main__":
+=======
+def start_bot():
+>>>>>>> fa75e18 (Сделал запуск тг бота и веб апп из одного файла)
     start_polling(disp, skip_updates=True)

@@ -1,4 +1,8 @@
 from sqlalchemy import select
+<<<<<<< HEAD
+=======
+import asyncio
+>>>>>>> fa75e18 (Сделал запуск тг бота и веб апп из одного файла)
 
 from bot.database import Base, async_engine, async_session_factory
 from bot.models import Users
