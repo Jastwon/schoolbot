@@ -1,11 +1,8 @@
 from sqlalchemy import select
-<<<<<<< HEAD
-=======
 import asyncio
->>>>>>> fa75e18 (Сделал запуск тг бота и веб апп из одного файла)
 
 from bot.database import Base, async_engine, async_session_factory
-from bot.models import Users
+from bot.models import Users, Tasks
 
 
 class AsyncORM:
@@ -23,6 +20,20 @@ class AsyncORM:
             session.add(user)
             await session.flush()
             await session.commit()
+
+    @staticmethod
+    async def insert_tasks(message, data):
+        async with async_session_factory() as session:
+            new_task = Tasks(
+                user_id=message.from_user.id,
+                text=data['task_text'],
+                age=data['age'],
+                period=data['period'],
+                correct_answer=message.text,  # Сохраняем правильный ответ
+            )
+            session.add(new_task)
+            await session.commit() 
+
 
     @staticmethod
     async def select_users():

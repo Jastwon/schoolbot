@@ -6,3 +6,9 @@ class Fullname(StatesGroup):
 
 class ManageUser(StatesGroup):
     user = State()
+
+class TeacherStates(StatesGroup):
+    waiting_age = State()
+    waiting_period = State()
+    waiting_task_text = State()
+    waiting_correct_answer = State()

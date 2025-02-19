@@ -62,3 +62,7 @@ def my_students(user_id: int):
     kb.add(btn, btn2)
     return kb
 
+def trimester_keyboard():
+    keyboard = ReplyKeyboardMarkup(resize_keyboard=True)
+    keyboard.add("1", "2", "3")
+    return keyboard

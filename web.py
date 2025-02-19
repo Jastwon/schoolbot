@@ -38,6 +38,8 @@ async def validate_api_key(api_key: str = Security(api_key_scheme)):
 async def get_users(api_key: str = Depends(validate_api_key)):
     return await AsyncORM.select_users()
 
+@app.post()
+
 @app.get("/admin", response_class=HTMLResponse)
 async def admin(request: Request):
     return templates.TemplateResponse("get_users.html", {"request": request})
