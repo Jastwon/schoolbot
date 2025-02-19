@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>schoolbot</title>
+  <style>
+    :root {
+      --primary-color: #1E90FF;
+      --accent-color: #FFA500;
+      --background-light: #F5F5F5;
+      --text-color: #333333;
+      --border-radius: 12px;
+      --box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: var(--background-light);
+      color: var(--text-color);
+      margin: 0;
+      padding: 16px;
+    }
+
+    h1 {
+      color: var(--primary-color);
+      text-align: center;
+    }
+
+    .card {
+      background-color: white;
+      border-radius: var(--border-radius);
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: var(--box-shadow);
+    }
+
+    .question {
+      margin-bottom: 20px;
+    }
+
+    .question h3 {
+      margin-top: 0;
+    }
+
+    button {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      box-shadow: var(--box-shadow);
+      width: 100%;
+      font-size: 16px;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .result {
+      text-align: center;
+      font-size: 18px;
+      font-weight: bold;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Задания</h1>
+
+    <!-- Карточка с заданиями -->
+    <div class="card">
+      <div class="question">
+        <h3>Задание 1</h3>
+        <p>Вопрос: Сколько будет 2 + 2?</p>
+        <input type="text" id="answer1" placeholder="Введите ответ">
+      </div>
+
+      <div class="question">
+        <h3>Задание 2</h3>
+        <p>Вопрос: Назовите столицу Франции.</p>
+        <input type="text" id="answer2" placeholder="Введите ответ">
+      </div>
+
+      <!-- Добавьте остальные задания по аналогии -->
+      <!-- ... -->
+
+      <div class="question">
+        <h3>Задание 10</h3>
+        <p>Вопрос: Сколько планет в Солнечной системе?</p>
+        <input type="text" id="answer10" placeholder="Введите ответ">
+      </div>
+    </div>
+
+    <!-- Кнопка для отправки ответов -->
+    <button onclick="submitAnswers()">Отправить ответы</button>
+
+    <!-- Блок для отображения результата -->
+    <div class="result" id="result"></div>
+  </div>
+
+  <script>
+    // Функция для отправки ответов
+    function submitAnswers() {
+      const answers = [];
+      for (let i = 1; i <= 10; i++) {
+        const answer = document.getElementById(`answer${i}`).value;
+        answers.push(answer);
+      }
+
+      // Здесь можно отправить ответы на сервер или обработать их
+      // Например, через Telegram Mini Apps API
+      const resultElement = document.getElementById('result');
+      resultElement.textContent = `Ответы отправлены: ${answers.join(', ')}`;
+
+      // Пример отправки данных в Telegram бота
+      if (window.Telegram && window.Telegram.WebApp) {
+        Telegram.WebApp.sendData(JSON.stringify(answers));
+      } else {
+        alert('Ответы отправлены: ' + answers.join(', '));
+      }
+    }
+  </script>
+</body>
+</html>

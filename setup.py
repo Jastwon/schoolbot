@@ -18,12 +18,12 @@ def run_web_app():
 if __name__ == "__main__":
     # Создаем потоки для бота и веб-приложения
     bot_thread = threading.Thread(target=run_bot)
-    #web_app_thread = threading.Thread(target=run_web_app)
+    web_app_thread = threading.Thread(target=run_web_app)
 
     # Запускаем потоки
     bot_thread.start()
-    #web_app_thread.start()
+    web_app_thread.start()
 
     # Ждем завершения потоков (хотя они могут работать бесконечно)
     bot_thread.join()
-    #web_app_thread.join()
+    web_app_thread.join()
