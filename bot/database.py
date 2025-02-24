@@ -4,7 +4,7 @@ from sqlalchemy.orm import DeclarativeBase
 
 
 async_engine = create_async_engine(
-    url = "sqlite+aiosqlite:///C:/Users/vurko/PycharmProjects/schcool_bot/bot/core/database.db",
+    url = "sqlite+aiosqlite:////media/jastwon/c30d0ee5-e0d6-4b66-8efe-c6523a401730/python_project/projects/schoolbot-main/app/bot/core/database.db",
     echo = False
 )
 

@@ -1,22 +1,22 @@
 from gettext import textdomain
 
-from config import *
+from bot.config import *
 import logging
 
 from aiogram.utils.executor import start_polling
 from aiogram import Bot
-from aiogram.types import Message, ChatActions, CallbackQuery
+from aiogram.types import Message, ChatActions, CallbackQuery, ReplyKeyboardRemove
 from aiogram.dispatcher import Dispatcher, FSMContext
 from aiogram.utils.deep_linking import get_start_link
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
 
-from keyboards import *
-from states import Fullname, ManageUser
+from bot.keyboards import *
+from bot.states import *
 
 from datetime import datetime
 
-from core.orm import AsyncORM
+from bot.core.orm import AsyncORM
 
 
 
@@ -51,7 +51,7 @@ async def start(message: Message):
             await bot.send_message(int(args), "У вас новый ученик")
 
         if user.role == "student":
-            await bot.send_message(message.from_user.id, "меню")
+            await bot.send_message(message.from_user.id, "меню", reply_markup=student_menu())
         else:
             await bot.send_message(message.from_user.id, "главное меню", reply_markup=teacher_menu())
 
@@ -90,10 +90,17 @@ async def messages(message: Message):
                     msgg = await bot.send_message(message.from_user.id, f"{student.fullname}\nТелеграм: @{student.username}", reply_markup=my_students(student.user_id))
         elif message.text == "Моя ссылка":
             await bot.send_message(message.from_user.id, f"Отправьте ссылку ученику\n`{await get_start_link(str(message.from_user.id))}`", parse_mode="MARKDOWN")
+
+        elif message.text == "Мои задания":
+            await bot.send_message(message.from_user.id, "Введите класс учеников (например: 5):")
+            await TeacherStates.waiting_age.set()
     else:
         if message.text == "Мои учителя":
-            teachers = user.ref.split()
-            await bot.send_message(message.from_user.id, "Выбирете учителя", reply_markup=teachers_btn(teachers))
+            teachers_id = user.ref.split()
+            teachers = list()
+            for teacher_id in teachers_id:
+                teachers.append(await AsyncORM.get_user_by_id(int(teacher_id)))
+            await bot.send_message(message.from_user.id, "Выберите учителя", reply_markup=teachers_btn(teachers))
 
 
 
@@ -139,6 +146,46 @@ async def manage_user(msg: Message, state: FSMContext):
 
 
 
+
+@disp.message_handler(state=TeacherStates.waiting_age)
+async def process_age(message: Message, state: FSMContext):
+    if message.text.isdigit() and 1 <= int(message.text) <= 11:
+        await state.update_data(age=message.text)
+        await TeacherStates.next()
+        await message.answer("Введите номер триместра (1-3):", reply_markup=trimester_keyboard())
+    else:
+        await message.answer("Некорректный класс! Введите число от 1 до 11:")
+
+@disp.message_handler(state=TeacherStates.waiting_period)
+async def process_period(message: Message, state: FSMContext):
+    if message.text in ["1", "2", "3"]:
+        await state.update_data(period=message.text)
+        await TeacherStates.next()
+        await message.answer("Введите текст задания:", reply_markup=ReplyKeyboardRemove())
+    else:
+        await message.answer("Используйте кнопки для выбора триместра!")
+
+@disp.message_handler(state=TeacherStates.waiting_task_text)
+async def process_task_text(message: Message, state: FSMContext):
+    await state.update_data(task_text=message.text)
+    await TeacherStates.next()
+    await message.answer("Введите правильный ответ на это задание:")
+
+# Новый обработчик для правильного ответа
+@disp.message_handler(state=TeacherStates.waiting_correct_answer)
+async def process_correct_answer(message: Message, state: FSMContext):
+    data = await state.get_data()
+    
+    await AsyncORM.insert_tasks(message, data)
+    
+    await state.finish()
+    await message.answer("✅ Задание и ответ успешно сохранены!", reply_markup=teacher_menu())
+
+
+
+
+
+
 @disp.callback_query_handler(lambda call: call.data.startswith("myteacher_"))
 
 
@@ -178,7 +225,6 @@ async def delete_student(call: CallbackQuery):
 
 
 
-
 @disp.callback_query_handler(text="again")
 async def again(call: CallbackQuery):
     global msg_true
@@ -191,8 +237,9 @@ async def again(call: CallbackQuery):
 @disp.callback_query_handler(text="next")
 async def next(call: CallbackQuery):
     await AsyncORM.insert_users(call.from_user.id, call.from_user.username, first_n + " " + second_n, "student", f"{args} ")
-    await bot.send_message(int(args), "У вас новый ученик")
-    await bot.send_message(call.from_user.id, "меню")
+    if args != "":
+        await bot.send_message(int(args), "У вас новый ученик")
+    await bot.send_message(call.from_user.id, "меню", reply_markup=student_menu())
 
 
 
@@ -218,5 +265,5 @@ async def next(call: CallbackQuery):
 
 
 
-if __name__ == "__main__":
+def start_bot():
     start_polling(disp, skip_updates=True)

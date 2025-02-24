@@ -4,6 +4,8 @@ from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 
+import uvicorn
+
 from bot.core.orm import AsyncORM
 from .schemas.models import GetUsers
 
@@ -41,6 +43,17 @@ async def admin(request: Request):
     return templates.TemplateResponse("get_users.html", {"request": request})
 
 
+@app.get("/tasks", response_class=HTMLResponse)
+async def admin(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
+
+
+
+
+async def start_web():
+    config = uvicorn.Config(app, host="localhost", port=8000)
+    server = uvicorn.Server(config)
+    await server.serve()
 
 
 
