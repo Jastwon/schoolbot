@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>School Helper - Просмотр ответов учеников</title>
+  <style>
+    :root {
+      --primary-color: #1E90FF;
+      --accent-color: #FFA500;
+      --background-light: #F5F5F5;
+      --text-color: #333333;
+      --border-radius: 12px;
+      --box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background-color: var(--background-light);
+      color: var(--text-color);
+      margin: 0;
+      padding: 16px;
+    }
+
+    h1 {
+      color: var(--primary-color);
+      text-align: center;
+      margin: 0;
+      font-size: 28px;
+    }
+
+    .subtitle {
+      text-align: center;
+      font-size: 14px;
+      color: #666;
+      margin-top: 8px;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .student-list, .answers-list {
+      background-color: white;
+      border-radius: var(--border-radius);
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: var(--box-shadow);
+    }
+
+    .student-item {
+      padding: 8px;
+      cursor: pointer;
+      border-bottom: 1px solid #eee;
+    }
+
+    .student-item:hover {
+      background-color: #f0f0f0;
+    }
+
+    .answers-list h3 {
+      margin-top: 0;
+    }
+
+    .answer-item {
+      margin-bottom: 12px;
+    }
+
+    .answer-item p {
+      margin: 4px 0;
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>School Helper</h1>
+    <p class="subtitle">Просмотр ответов учеников</p>
+    <div class="student-list">
+      <h3>Список учеников</h3>
+      <div class="student-item" onclick="showAnswers(1)">Иванов Иван</div>
+      <div class="student-item" onclick="showAnswers(2)">Петров Петр</div>
+    </div>
+    <div class="answers-list hidden" id="answers-1">
+      <h3>Ответы Иванова Ивана</h3>
+      <div class="answer-item">
+        <p><strong>Задание 1:</strong> Решите уравнение: 2x + 3 = 7</p>
+        <p><strong>Ответ:</strong> 2</p>
+      </div>
+      <div class="answer-item">
+        <p><strong>Задание 2:</strong> Что такое фотосинтез?</p>
+        <p><strong>Ответ:</strong> Процесс, при котором растения преобразуют свет в энергию</p>
+      </div>
+    </div>
+    <div class="answers-list hidden" id="answers-2">
+      <h3>Ответы Петрова Петра</h3>
+      <div class="answer-item">
+        <p><strong>Задание 1:</strong> Решите уравнение: 2x + 3 = 7</p>
+        <p><strong>Ответ:</strong> 3</p>
+      </div>
+      <div class="answer-item">
+        <p><strong>Задание 2:</strong> Что такое фотосинтез?</p>
+        <p><strong>Ответ:</strong> Не знаю</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function showAnswers(studentId) {
+      // Скрываем все блоки с ответами
+      document.querySelectorAll('.answers-list').forEach(el => el.classList.add('hidden'));
+      // Показываем ответы выбранного ученика
+      document.getElementById(`answers-${studentId}`).classList.remove('hidden');
+    }
+  </script>
+</body>
+</html>

@@ -12,3 +12,7 @@ class TeacherStates(StatesGroup):
     waiting_period = State()
     waiting_task_text = State()
     waiting_correct_answer = State()
+
+class GetTasks(StatesGroup):
+    age = State()
+    period = State()

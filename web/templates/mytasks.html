@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <title>School Helper - Выбор заданий</title>
+  <style>
+    :root {
+      --primary-color: #1E90FF;
+      --accent-color: #FFA500;
+      --background-light: #F5F5F5;
+      --text-color: #333333;
+      --border-radius: 12px;
+      --box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background-color: var(--background-light);
+      color: var(--text-color);
+      margin: 0;
+      padding: 16px;
+      touch-action: none;
+    }
+
+    h1 {
+      color: var(--primary-color);
+      text-align: center;
+      margin: 0;
+      font-size: 28px;
+    }
+
+    .subtitle {
+      text-align: center;
+      font-size: 14px;
+      color: #666;
+      margin-top: 8px;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    select, button {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: var(--border-radius);
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+
+    button {
+      background-color: var(--primary-color);
+      color: white;
+      cursor: pointer;
+      font-size: 16px;
+      border: none;
+    }
+
+    button:hover {
+      background-color: var(--accent-color);
+    }
+
+    .tasks-container {
+      margin-top: 20px;
+    }
+
+    .task {
+      background-color: white;
+      border-radius: var(--border-radius);
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: var(--box-shadow);
+    }
+
+    .task p {
+      margin: 0 0 10px;
+    }
+
+    .task input {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: var(--border-radius);
+      box-sizing: border-box;
+    }
+  </style>
+</head>
+<body>
+<!--  <a href="/student" title="Назад" style="position: absolute; top: 10px; left: 10px; font-size: 24px; color: #1E90FF; text-decoration: none;"><</a>-->
+  <div class="container">
+    <h1>School Helper</h1>
+    <p class="subtitle">Выбор заданий</p>
+    <div class="form-group">
+      <label for="teacher">Учитель:</label>
+      <select id="teacher">
+        <option value="">Выберите учителя</option>
+        {% for teacher in teachers %}
+        <option value="{{ teacher.user_id }}">{{teacher.fullname}}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="class">Класс:</label>
+      <select id="class">
+        <option value="">Выберите класс</option>
+        <option value="5">5</option>
+        <option value="6">6</option>
+        <option value="7">7</option>
+        <option value="8">8</option>
+        <option value="9">9</option>
+        <option value="10">10</option>
+        <option value="11">11</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="trimester">Триместр:</label>
+      <select id="trimester">
+        <option value="">Выберите триместр</option>
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+      </select>
+    </div>
+    <button onclick="findTasks()">Найти</button>
+    <div class="tasks-container" id="tasks-container"></div>
+  </div>
+
+  <script>
+    let tasks = [];
+
+    // Функция для получения списка учителей с сервера
+<!--    async function loadTeachers() {-->
+<!--      try {-->
+<!--        const studentId = Telegram.WebApp.initDataUnsafe.user.id-->
+<!--        const response = await fetch('/teachers?student_id=${studentId}');-->
+<!--        const teachers = await response.json();-->
+<!--        const teacherSelect = document.getElementById('teacher');-->
+<!--        teachers.forEach(teacher => {-->
+<!--          const option = document.createElement('option');-->
+<!--          option.value = teacher.id;-->
+<!--          option.textContent = teacher.name;-->
+<!--          teacherSelect.appendChild(option);-->
+<!--        });-->
+<!--      } catch (error) {-->
+<!--        console.error('Ошибка при загрузке учителей:', error);-->
+<!--      }-->
+<!--    }-->
+
+    // Функция для поиска заданий
+    async function findTasks() {
+      const teacher = document.getElementById('teacher').value;
+      const classValue = document.getElementById('class').value;
+      const trimester = document.getElementById('trimester').value;
+
+      if (!teacher || !classValue || !trimester) {
+        alert('Пожалуйста, выберите учителя, класс и триместр.');
+        return;
+      }
+
+      try {
+        const response = await fetch(`/student/get_tasks?teacher=${teacher}&class_=${classValue}&trimester=${trimester}`);
+        tasks = await response.json();
+        displayTasks(tasks);
+      } catch (error) {
+        console.error('Ошибка при поиске заданий:', error);
+        alert('Произошла ошибка при поиске заданий.');
+      }
+    }
+
+    // Функция для отображения заданий
+    function displayTasks(tasks) {
+      const tasksContainer = document.getElementById('tasks-container');
+      tasksContainer.innerHTML = '';
+
+      if (tasks.length === 0) {
+        tasksContainer.innerHTML = '<p>Задания не найдены.</p>';
+        return;
+      }
+
+      tasks.forEach((task, index) => {
+        const taskDiv = document.createElement('div');
+        taskDiv.className = 'task';
+        taskDiv.innerHTML = `
+          <p>${task.text}</p>
+          <input type="text" id="answer-${index}" placeholder="Ваш ответ">
+        `;
+        tasksContainer.appendChild(taskDiv);
+      });
+
+      const submitButton = document.createElement('button');
+      submitButton.textContent = 'Отправить ответы';
+      submitButton.onclick = submitAnswers;
+      tasksContainer.appendChild(submitButton);
+    }
+
+    // Функция для отправки ответов
+    async function submitAnswers() {
+      const answers = tasks.map((task, index) => {
+        const answerInput = document.getElementById(`answer-${index}`);
+        return {
+          taskId: task.id,
+          answer: answerInput.value
+        };
+      });
+
+      try {
+        const response = await fetch('/student/answers', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(answers)
+        });
+
+        if (response.ok) {
+          alert('Ответы успешно отправлены');
+        } else {
+          alert('Ошибка при отправке ответов');
+        }
+      } catch (error) {
+        console.error('Ошибка при отправке ответов:', error);
+        alert('Произошла ошибка при отправке ответов.');
+      }
+    }
+
+    // Загрузка списка учителей при загрузке страницы
+    window.onload = loadTeachers;
+
+    // Блокировка масштабирования колесом мыши
+    document.addEventListener('wheel', function(e) {
+      if (e.ctrlKey) {
+        e.preventDefault();
+      }
+    }, { passive: false });
+  </script>
+</body>
+</html>

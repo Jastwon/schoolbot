@@ -1,13 +1,86 @@
-/* Для мобильных устройств */
-@media (max-width: 600px) {
-    body {
-        font-size: 14px;
+:root {
+      --primary-color: #1E90FF;
+      --accent-color: #FFA500;
+      --background-light: #F5F5F5;
+      --text-color: #333333;
+      --border-radius: 12px;
+      --box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
-}
 
-/* Для десктопов */
-@media (min-width: 601px) {
     body {
-        font-size: 16px;
+      font-family: 'Roboto', sans-serif;
+      background-color: var(--background-light);
+      color: var(--text-color);
+      margin: 0;
+      padding: 16px;
+      touch-action: none;
     }
-}
+
+    h1 {
+      color: var(--primary-color);
+      text-align: center;
+    }
+
+    .card {
+      background-color: white;
+      border-radius: var(--border-radius);
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: var(--box-shadow);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+
+    .question {
+      margin-bottom: 20px;
+    }
+
+    .question h3 {
+      margin-top: 0;
+    }
+
+    button {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      box-shadow: var(--box-shadow);
+      width: 100%;
+      font-size: 16px;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: var(--accent-color);
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .success-message {
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+      margin-top: 20px;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+
+    .success-message.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .success-message .icon {
+      font-size: 48px;
+      color: #4CAF50;
+      margin-bottom: 10px;
+    }
+
+    .hidden {
+      display: none;
+    }

@@ -2,11 +2,12 @@ from gettext import textdomain
 
 from bot.config import *
 import logging
+import json
 
 from aiogram.utils.executor import start_polling
 from aiogram import Bot
-from aiogram.types import Message, ChatActions, CallbackQuery, ReplyKeyboardRemove
-from aiogram.dispatcher import Dispatcher, FSMContext
+from aiogram.types import Message, ChatActions, CallbackQuery, ReplyKeyboardRemove, WebAppInfo, ContentType
+from aiogram.dispatcher import Dispatcher, FSMContext, filters
 from aiogram.utils.deep_linking import get_start_link
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
@@ -27,7 +28,7 @@ logging.basicConfig(level=logging.INFO)
 memory = MemoryStorage()
 bot = Bot(token=TOKEN)
 disp = Dispatcher(bot, storage=memory)
-
+BASE_DOMAIN = "z8xc7a-46-138-24-156.ru.tuna.am"
 
 
 
@@ -52,8 +53,24 @@ async def start(message: Message):
 
         if user.role == "student":
             await bot.send_message(message.from_user.id, "меню", reply_markup=student_menu())
+            keyboard = InlineKeyboardMarkup()
+            button = InlineKeyboardButton(
+                text="Открыть веб-приложение",
+                web_app=WebAppInfo(
+                    url=f"https://{BASE_DOMAIN}/student/my_teachers?student_id={message.from_user.id}")
+            )
+            keyboard.add(button)
+            await message.answer("Веб апп", reply_markup=keyboard)
         else:
             await bot.send_message(message.from_user.id, "главное меню", reply_markup=teacher_menu())
+            keyboard = InlineKeyboardMarkup()
+            button = InlineKeyboardButton(
+                text="Открыть веб-приложение",
+                web_app=WebAppInfo(
+                    url=f"https://{BASE_DOMAIN}/teacher")
+            )
+            keyboard.add(button)
+            await message.answer("Веб апп", reply_markup=keyboard)
 
 
 @disp.message_handler(commands=["admin"])
@@ -102,6 +119,72 @@ async def messages(message: Message):
                 teachers.append(await AsyncORM.get_user_by_id(int(teacher_id)))
             await bot.send_message(message.from_user.id, "Выберите учителя", reply_markup=teachers_btn(teachers))
 
+
+
+
+
+
+
+
+
+
+@disp.callback_query_handler(lambda call: call.data.startswith("myteacher_"))
+async def my_teacher_select(call: CallbackQuery):
+    global user_id_teacher
+    user_id_teacher = int(call.data.split("_")[1])
+    await bot.send_message(call.from_user.id, "Введите класс (только число)")
+    await GetTasks.age.set()
+
+
+@disp.callback_query_handler(lambda call: call.data.startswith("changerole_"))
+async def mng(call: CallbackQuery):
+    global user_data
+
+    user_id = int(call.data.split("_")[1])
+    user = await AsyncORM.get_user_by_id(user_id)
+
+    if user != "":
+        if user.role == "student":
+            await AsyncORM.update_role(user_id=user_id)
+            await bot.edit_message_text(f"Пользователь: @{user.username}\nИмя: {user.fullname}\nРоль: teacher",
+                                        call.from_user.id, user_data.message_id, reply_markup=mng_user(user_id))
+            await bot.send_message(user_id, "ваша роль изменена на teacher")
+
+        else:
+            await AsyncORM.update_role(user_id=user_id, new_role="student")
+            await bot.edit_message_text(f"Пользователь: @{user.username}\nИмя: {user.fullname}\nРоль: student",
+                                        call.from_user.id, user_data.message_id, reply_markup=mng_user(user_id))
+            await bot.send_message(user_id, "ваша роль изменена на student")
+
+
+@disp.callback_query_handler(lambda call: call.data.startswith("mystudent_"))
+async def mystd(call: CallbackQuery):
+    pass
+
+
+@disp.callback_query_handler(lambda call: call.data.startswith("deletestudent_"))
+async def delete_student(call: CallbackQuery):
+    student_id = call.data.split("_")[1]
+    await AsyncORM.delete_ref(int(student_id), str(call.from_user.id))
+    await bot.delete_message(call.from_user.id, msgg.message_id)
+    await bot.send_message(call.from_user.id, "Ученик удален")
+
+
+@disp.callback_query_handler(text="again")
+async def again(call: CallbackQuery):
+    global msg_true
+    await bot.send_message(call.from_user.id, "Введите имя")
+    await bot.delete_message(call.from_user.id, msg_true.message_id)
+    await Fullname.first_name.set()
+
+
+@disp.callback_query_handler(text="next")
+async def next(call: CallbackQuery):
+    await AsyncORM.insert_users(call.from_user.id, call.from_user.username, first_n + " " + second_n, "student",
+                                f"{args} ")
+    if args != "":
+        await bot.send_message(int(args), "У вас новый ученик")
+    await bot.send_message(call.from_user.id, "меню", reply_markup=student_menu())
 
 
 
@@ -185,62 +268,31 @@ async def process_correct_answer(message: Message, state: FSMContext):
 
 
 
+@disp.message_handler(state=GetTasks.age)
+async def get_age(msg: Message, state: FSMContext):
+    await state.update_data(age=msg.text)
+    await GetTasks.next()
+    await msg.answer("Введите триместр", reply_markup=trimester_keyboard())
 
-@disp.callback_query_handler(lambda call: call.data.startswith("myteacher_"))
+@disp.message_handler(state=GetTasks.period)
+async def get_period(msg: Message, state: FSMContext):
+    data = await state.get_data()
+    period = msg.text
+    tasks = await AsyncORM.get_tasks_by_id(user_id_teacher, data["age"], period)
+    if not(tasks):
+        await msg.answer("Для вас нет заданий", reply_markup=student_menu())
+        await state.finish()
+        return
+    keyboard = InlineKeyboardMarkup()
+    button = InlineKeyboardButton(
+        text="Открыть веб-приложение",
+        web_app=WebAppInfo(url=f"https://k8y3y5-46-138-24-156.ru.tuna.am/webapp?teacher_id={user_id_teacher}&age={data['age']}&period={period}")
+    )
+    keyboard.add(button)
+    await msg.answer("Для выполнения откройте приложение", reply_markup=keyboard)
+    await state.finish()
 
-
-@disp.callback_query_handler(lambda call: call.data.startswith("changerole_"))
-async def mng(call: CallbackQuery):
-    global user_data
-
-    user_id = int(call.data.split("_")[1])
-    user = await AsyncORM.get_user_by_id(user_id)
-
-
-    if user != "":
-        if user.role == "student":
-            await AsyncORM.update_role(user_id=user_id)
-            await bot.edit_message_text(f"Пользователь: @{user.username}\nИмя: {user.fullname}\nРоль: teacher", call.from_user.id, user_data.message_id, reply_markup=mng_user(user_id))
-            await bot.send_message(user_id, "ваша роль изменена на teacher")
-
-        else:
-            await AsyncORM.update_role(user_id=user_id, new_role="student")
-            await bot.edit_message_text(f"Пользователь: @{user.username}\nИмя: {user.fullname}\nРоль: student", call.from_user.id, user_data.message_id, reply_markup=mng_user(user_id))
-            await bot.send_message(user_id, "ваша роль изменена на student")
-
-
-@disp.callback_query_handler(lambda call: call.data.startswith("mystudent_"))
-async def mystd(call: CallbackQuery):
-    pass
-
-@disp.callback_query_handler(lambda call: call.data.startswith("deletestudent_"))
-async def delete_student(call: CallbackQuery):
-    student_id = call.data.split("_")[1]
-    await AsyncORM.delete_ref(int(student_id), str(call.from_user.id))
-    await bot.delete_message(call.from_user.id, msgg.message_id)
-    await bot.send_message(call.from_user.id, "Ученик удален")
-
-
-
-
-
-
-@disp.callback_query_handler(text="again")
-async def again(call: CallbackQuery):
-    global msg_true
-    await bot.send_message(call.from_user.id, "Введите имя")
-    await bot.delete_message(call.from_user.id, msg_true.message_id)
-    await Fullname.first_name.set()
-
-
-
-@disp.callback_query_handler(text="next")
-async def next(call: CallbackQuery):
-    await AsyncORM.insert_users(call.from_user.id, call.from_user.username, first_n + " " + second_n, "student", f"{args} ")
-    if args != "":
-        await bot.send_message(int(args), "У вас новый ученик")
-    await bot.send_message(call.from_user.id, "меню", reply_markup=student_menu())
-
+#send web_app
 
 
 

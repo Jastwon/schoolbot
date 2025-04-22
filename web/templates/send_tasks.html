@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>School Helper - Создание заданий</title>
+  <!-- Подключение MathJax -->
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #F5F5F5;
+      color: #333;
+      margin: 0;
+      padding: 16px;
+      touch-action: none;
+    }
+
+    h1 {
+      color: #1E90FF;
+      text-align: center;
+      font-size: 28px;
+    }
+
+    .subtitle {
+      text-align: center;
+      font-size: 14px;
+      color: #666;
+      margin-top: 8px;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .task {
+      background-color: white;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    textarea, input[type="text"] {
+      width: 100%;
+      margin-bottom: 8px;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 12px;
+      box-sizing: border-box;
+    }
+
+    textarea {
+      height: 100px;
+    }
+
+    select {
+      margin-bottom: 8px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    button {
+      background-color: #1E90FF;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-top: 12px;
+    }
+
+    button:hover {
+      background-color: #FFA500;
+    }
+
+    .math-keyboard {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 5px;
+      margin-bottom: 12px;
+    }
+
+    .math-keyboard button {
+      padding: 8px;
+      font-size: 14px;
+    }
+
+    .preview {
+      margin-top: 8px;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 12px;
+      background-color: #fff;
+    }
+
+    .error {
+      color: #FF4444;
+      font-size: 12px;
+      margin-top: 4px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <a href="/teacher" title="Назад" style="position: absolute; top: 10px; left: 10px; font-size: 24px; color: #1E90FF; text-decoration: none;"><</a>
+  <div class="container">
+    <h1>School Helper</h1>
+    <p class="subtitle">Создание заданий для учеников</p>
+    <div id="tasks-container">
+      <!-- Здесь будут добавляться новые задания -->
+    </div>
+    <button onclick="addTask()">Добавить задание</button>
+    <button onclick="submitTasks()">Отправить задания</button>
+  </div>
+
+  <script>
+    let activeField = null;
+
+    // Функция для добавления нового задания
+    function addTask() {
+      const tasksContainer = document.getElementById('tasks-container');
+      const taskDiv = document.createElement('div');
+      taskDiv.className = 'task';
+      taskDiv.innerHTML = `
+        <select name="class" required>
+          <option value="" disabled selected>Выберите класс</option>
+          <option value="5">5</option>
+          <option value="6">6</option>
+          <option value="7">7</option>
+          <option value="8">8</option>
+          <option value="9">9</option>
+          <option value="10">10</option>
+          <option value="11">11</option>
+        </select>
+        <div class="error" id="class-error">Выберите класс</div>
+        <select name="trimester" required>
+          <option value="" disabled selected>Выберите триместр</option>
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+        </select>
+        <div class="error" id="trimester-error">Выберите триместр</div>
+        <div class="math-keyboard">
+          <button onclick="insertMath('\\sqrt{}')">√</button>
+          <button onclick="insertMath('^{}')">xⁿ</button>
+          <button onclick="insertMath('_{}')">xₙ</button>
+          <button onclick="insertMath('\\frac{}{}')">a/b</button>
+          <button onclick="insertMath('\\pi')">π</button>
+          <button onclick="insertMath('+')">+</button>
+          <button onclick="insertMath('-')">−</button>
+          <button onclick="insertMath('*')">×</button>
+          <button onclick="insertMath('/')">÷</button>
+          <button onclick="insertMath('=')">=</button>
+        </div>
+        <textarea name="text" placeholder="Введите текст задания" onfocus="setActiveField(this)" oninput="updatePreview(this)" required></textarea>
+        <div class="preview" id="text-preview"></div>
+        <div class="error" id="text-error">Введите текст задания</div>
+        <input type="text" name="correctAnswer" placeholder="Введите правильный ответ" onfocus="setActiveField(this)" oninput="updatePreview(this)" required>
+        <div class="preview" id="answer-preview"></div>
+        <div class="error" id="correctAnswer-error">Введите правильный ответ</div>
+      `;
+      tasksContainer.appendChild(taskDiv);
+      MathJax.typeset(); // Обновляем отображение MathJax
+    }
+
+    // Функция для сохранения активного поля
+    function setActiveField(element) {
+      activeField = element;
+    }
+
+    // Функция для вставки математического кода
+    function insertMath(latex) {
+      if (!activeField || (activeField.tagName !== 'TEXTAREA' && activeField.tagName !== 'INPUT')) {
+        console.error('Нет активного поля для ввода');
+        return;
+      }
+      const start = activeField.selectionStart || 0;
+      const end = activeField.selectionEnd || 0;
+      const value = activeField.value;
+      activeField.value = value.slice(0, start) + latex + value.slice(end);
+      activeField.focus(); // Возвращаем фокус полю
+      activeField.selectionStart = start + latex.length;
+      activeField.selectionEnd = start + latex.length;
+      updatePreview(activeField); // Обновляем предпросмотр
+    }
+
+    // Функция для предпросмотра
+    function updatePreview(element) {
+      const taskDiv = element.closest('.task');
+      const previewId = element.name === 'text' ? 'text-preview' : 'answer-preview';
+      const previewDiv = taskDiv.querySelector(`#${previewId}`);
+      previewDiv.innerHTML = `\\(${element.value}\\)`;
+      MathJax.typesetPromise().catch(err => console.error(err));
+    }
+
+    // Функция для отправки заданий
+    async function submitTasks() {
+      const tasks = [];
+      const taskDivs = document.querySelectorAll('.task');
+      let isValid = true;
+
+      taskDivs.forEach((taskDiv) => {
+        const classValue = taskDiv.querySelector('select[name="class"]').value;
+        const trimester = taskDiv.querySelector('select[name="trimester"]').value;
+        const text = taskDiv.querySelector('textarea[name="text"]').value;
+        const correctAnswer = taskDiv.querySelector('input[name="correctAnswer"]').value;
+        const hasMath = taskDiv.querySelector('input[name="hasMath"]').checked;
+
+        if (!classValue) {
+          taskDiv.querySelector('#class-error').style.display = 'block';
+          isValid = false;
+        } else {
+          taskDiv.querySelector('#class-error').style.display = 'none';
+        }
+        if (!trimester) {
+          taskDiv.querySelector('#trimester-error').style.display = 'block';
+          isValid = false;
+        } else {
+          taskDiv.querySelector('#trimester-error').style.display = 'none';
+        }
+        if (!text.trim()) {
+          taskDiv.querySelector('#text-error').style.display = 'block';
+          isValid = false;
+        } else {
+          taskDiv.querySelector('#text-error').style.display = 'none';
+        }
+        if (!correctAnswer.trim()) {
+          taskDiv.querySelector('#correctAnswer-error').style.display = 'block';
+          isValid = false;
+        } else {
+          taskDiv.querySelector('#correctAnswer-error').style.display = 'none';
+        }
+
+        if (classValue && trimester && text.trim() && correctAnswer.trim()) {
+          tasks.push({
+            class: classValue,
+            trimester: trimester,
+            text: text,
+            correctAnswer: correctAnswer,
+            hasMath: hasMath
+          });
+        }
+      });
+
+      if (!isValid || tasks.length === 0) {
+        alert('Пожалуйста, заполните все поля корректно.');
+        return;
+      }
+
+      try {
+        const response = await fetch('/teacher/tasks', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tasks })
+        });
+
+        if (response.ok) {
+          alert('Задания успешно отправлены!');
+          document.getElementById('tasks-container').innerHTML = '';
+        } else {
+          const error = await response.json();
+          alert(`Ошибка: ${error.detail}`);
+        }
+      } catch (error) {
+        console.error('Ошибка:', error);
+        alert('Произошла ошибка при отправке данных.');
+      }
+    }
+
+    // Блокировка масштабирования колесом мыши
+    document.addEventListener('wheel', function(e) {
+      if (e.ctrlKey) {
+        e.preventDefault();
+      }
+    }, { passive: false });
+  </script>
+</body>
+</html>

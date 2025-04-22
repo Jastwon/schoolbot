@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>School Helper - Учителя ученика</title>
+  <style>
+    :root {
+      --primary-color: #1E90FF;
+      --accent-color: #FFA500;
+      --background-light: #F5F5F5;
+      --text-color: #333333;
+      --border-radius: 12px;
+      --box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background-color: var(--background-light);
+      color: var(--text-color);
+      margin: 0;
+      padding: 16px;
+      touch-action: none;
+    }
+
+    h1 {
+      color: var(--primary-color);
+      text-align: center;
+      margin: 0;
+      font-size: 28px;
+    }
+
+    .subtitle {
+      text-align: center;
+      font-size: 14px;
+      color: #666;
+      margin-top: 8px;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .teacher-list {
+      margin-top: 20px;
+    }
+
+    .teacher-card {
+      background-color: white;
+      border-radius: var(--border-radius);
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: var(--box-shadow);
+    }
+
+    .teacher-name {
+      font-size: 18px;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .teacher-subject {
+      font-size: 16px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <a href="/teacher" title="Назад" style="position: absolute; top: 10px; left: 10px; font-size: 24px; color: #1E90FF; text-decoration: none;"><</a>
+  <div class="container">
+    <h1>School Helper</h1>
+    <p class="subtitle">Список учителей ученика</p>
+    <div class="teacher-list">
+      {% for teacher in teachers %}
+      <div class="teacher-card">
+        <a href="/teacher"><div class="teacher-name">{{teacher.fullname}}</div></a>
+      </div>
+      {% endfor %}
+
+    </div>
+  </div>
+
+  <script>
+    // Блокировка масштабирования колесом мыши
+    document.addEventListener('wheel', function(e) {
+      if (e.ctrlKey) {
+        e.preventDefault();
+      }
+    }, { passive: false });
+  </script>
+</body>
+</html>

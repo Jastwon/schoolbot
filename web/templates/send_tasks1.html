@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>School Helper - Создание заданий</title>
+  <style>
+    :root {
+      --primary-color: #1E90FF;
+      --accent-color: #FFA500;
+      --background-light: #F5F5F5;
+      --text-color: #333333;
+      --border-radius: 12px;
+      --box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      --error-color: #FF4444;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background-color: var(--background-light);
+      color: var(--text-color);
+      margin: 0;
+      padding: 16px;
+      touch-action: none;
+    }
+
+    h1 {
+      color: var(--primary-color);
+      text-align: center;
+      margin: 0;
+      font-size: 28px;
+    }
+
+    .subtitle {
+      text-align: center;
+      font-size: 14px;
+      color: #666;
+      margin-top: 8px;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .task {
+      background-color: white;
+      border-radius: var(--border-radius);
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: var(--box-shadow);
+    }
+
+    textarea, input[type="text"] {
+      width: 100%;
+      margin-bottom: 8px;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: var(--border-radius);
+      box-sizing: border-box;
+    }
+
+    textarea {
+      height: 100px;
+    }
+
+    select, input[type="checkbox"] {
+      margin-bottom: 8px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    button {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      box-shadow: var(--box-shadow);
+      width: 100%;
+      font-size: 16px;
+      transition: background-color 0.3s ease;
+      margin-top: 12px;
+    }
+
+    button:hover {
+      background-color: var(--accent-color);
+    }
+
+    .error {
+      color: var(--error-color);
+      font-size: 12px;
+      margin-top: 4px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <a href="/teacher" title="Назад" style="position: absolute; top: 10px; left: 10px; font-size: 24px; color: #1E90FF; text-decoration: none;">&lt;</a>
+  <div class="container">
+    <h1>School Helper</h1>
+    <p class="subtitle">Создание заданий для учеников</p>
+    <div id="tasks-container">
+      <!-- Здесь будут добавляться новые задания -->
+    </div>
+    <button onclick="addTask()">Добавить задание</button>
+    <button onclick="submitTasks()">Отправить задания</button>
+  </div>
+
+  <script>
+    // Функция для добавления нового задания
+    function addTask() {
+      const tasksContainer = document.getElementById('tasks-container');
+      const taskDiv = document.createElement('div');
+      taskDiv.className = 'task';
+      taskDiv.innerHTML = `
+        <select name="class" required>
+          <option value="" disabled selected>Выберите класс</option>
+          <option value="5">5</option>
+          <option value="6">6</option>
+          <option value="7">7</option>
+          <option value="8">8</option>
+          <option value="9">9</option>
+          <option value="10">10</option>
+          <option value="11">11</option>
+        </select>
+        <div class="error" id="class-error">Выберите класс</div>
+        <select name="trimester" required>
+          <option value="" disabled selected>Выберите триместр</option>
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3">3</option>
+        </select>
+        <div class="error" id="trimester-error">Выберите триместр</div>
+        <textarea name="text" placeholder="Введите текст задания" required></textarea>
+        <div class="error" id="text-error">Введите текст задания</div>
+        <input type="text" name="correctAnswer" placeholder="Введите правильный ответ" required>
+        <div class="error" id="correctAnswer-error">Введите правильный ответ</div>
+        <label>
+          <input type="checkbox" name="hasMath"> Содержит математические примеры
+        </label>
+      `;
+      tasksContainer.appendChild(taskDiv);
+    }
+
+    // Функция для отправки заданий с клиентской валидацией
+    async function submitTasks() {
+      const tasks = [];
+      const taskDivs = document.querySelectorAll('.task');
+      let isValid = true;
+
+      taskDivs.forEach((taskDiv) => {
+        const classValue = taskDiv.querySelector('select[name="class"]').value;
+        const trimester = taskDiv.querySelector('select[name="trimester"]').value;
+        const text = taskDiv.querySelector('textarea[name="text"]').value;
+        const correctAnswer = taskDiv.querySelector('input[name="correctAnswer"]').value;
+        const hasMath = taskDiv.querySelector('input[name="hasMath"]').checked;
+
+        // Показываем ошибки, если поля не заполнены
+        if (!classValue) {
+          taskDiv.querySelector('#class-error').style.display = 'block';
+          isValid = false;
+        } else {
+          taskDiv.querySelector('#class-error').style.display = 'none';
+        }
+        if (!trimester) {
+          taskDiv.querySelector('#trimester-error').style.display = 'block';
+          isValid = false;
+        } else {
+          taskDiv.querySelector('#trimester-error').style.display = 'none';
+        }
+        if (!text.trim()) {
+          taskDiv.querySelector('#text-error').style.display = 'block';
+          isValid = false;
+        } else {
+          taskDiv.querySelector('#text-error').style.display = 'none';
+        }
+        if (!correctAnswer.trim()) {
+          taskDiv.querySelector('#correctAnswer-error').style.display = 'block';
+          isValid = false;
+        } else {
+          taskDiv.querySelector('#correctAnswer-error').style.display = 'none';
+        }
+
+        if (classValue && trimester && text.trim() && correctAnswer.trim()) {
+          tasks.push({
+            class: classValue,
+            trimester: trimester,
+            text: text,
+            correctAnswer: correctAnswer,
+            hasMath: hasMath
+          });
+        }
+      });
+
+      if (!isValid || tasks.length === 0) {
+        alert('Пожалуйста, заполните все поля корректно.');
+        return;
+      }
+
+      try {
+        const response = await fetch('/teacher/tasks', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tasks })
+        });
+
+        if (response.ok) {
+          alert('Задания успешно отправлены!');
+          document.getElementById('tasks-container').innerHTML = '';
+        } else {
+          const error = await response.json();
+          alert(`Ошибка: ${error.detail}`);
+        }
+      } catch (error) {
+        console.error('Ошибка:', error);
+        alert('Произошла ошибка при отправке данных.');
+      }
+    }
+  </script>
+</body>
+</html>

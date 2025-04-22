@@ -2,130 +2,96 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <title>schoolbot</title>
-  <style>
-    :root {
-      --primary-color: #1E90FF;
-      --accent-color: #FFA500;
-      --background-light: #F5F5F5;
-      --text-color: #333333;
-      --border-radius: 12px;
-      --box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-
-    body {
-      font-family: 'Roboto', sans-serif;
-      background-color: var(--background-light);
-      color: var(--text-color);
-      margin: 0;
-      padding: 16px;
-    }
-
-    h1 {
-      color: var(--primary-color);
-      text-align: center;
-    }
-
-    .card {
-      background-color: white;
-      border-radius: var(--border-radius);
-      padding: 16px;
-      margin-bottom: 12px;
-      box-shadow: var(--box-shadow);
-    }
-
-    .question {
-      margin-bottom: 20px;
-    }
-
-    .question h3 {
-      margin-top: 0;
-    }
-
-    button {
-      background-color: var(--primary-color);
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      border-radius: var(--border-radius);
-      cursor: pointer;
-      box-shadow: var(--box-shadow);
-      width: 100%;
-      font-size: 16px;
-    }
-
-    button:hover {
-      opacity: 0.9;
-    }
-
-    .container {
-      max-width: 600px;
-      margin: 0 auto;
-    }
-
-    .result {
-      text-align: center;
-      font-size: 18px;
-      font-weight: bold;
-      margin-top: 20px;
-    }
-  </style>
+  <link rel="stylesheet" href="/static/css/style.css">
 </head>
 <body>
   <div class="container">
     <h1>Задания</h1>
 
     <!-- Карточка с заданиями -->
-    <div class="card">
+    <div class="card" id="tasks-card">
+      {% for task in tasks %}
       <div class="question">
-        <h3>Задание 1</h3>
-        <p>Вопрос: Сколько будет 2 + 2?</p>
-        <input type="text" id="answer1" placeholder="Введите ответ">
+        <h3>Задание {{loop.index}}</h3>
+        <p>{{ task.text }}</p>
+        <input type="text" id="answer{{loop.index}}" placeholder="Введите ответ">
       </div>
-
-      <div class="question">
-        <h3>Задание 2</h3>
-        <p>Вопрос: Назовите столицу Франции.</p>
-        <input type="text" id="answer2" placeholder="Введите ответ">
-      </div>
-
-      <!-- Добавьте остальные задания по аналогии -->
-      <!-- ... -->
-
-      <div class="question">
-        <h3>Задание 10</h3>
-        <p>Вопрос: Сколько планет в Солнечной системе?</p>
-        <input type="text" id="answer10" placeholder="Введите ответ">
-      </div>
+      {% endfor %}
     </div>
 
     <!-- Кнопка для отправки ответов -->
-    <button onclick="submitAnswers()">Отправить ответы</button>
+    <button class="send-button" onclick="submitAnswers()">Отправить ответы</button>
 
-    <!-- Блок для отображения результата -->
-    <div class="result" id="result"></div>
+    <!-- Сообщение об успешной отправке -->
+    <div class="success-message" id="success-message">
+      <div class="icon">✔️</div>
+      <div>Задания отправлены!</div>
+    </div>
   </div>
 
   <script>
     // Функция для отправки ответов
-    function submitAnswers() {
-      const answers = [];
-      for (let i = 1; i <= 10; i++) {
-        const answer = document.getElementById(`answer${i}`).value;
-        answers.push(answer);
-      }
+    async function submitAnswers() {
+      try {
+        // 1. Собираем все ответы
+        const answerInputs = document.querySelectorAll('[id^="answer"]');
+        const answers = Array.from(answerInputs).map(input => ({
+          question_id: input.id.replace('answer', ''),
+          answer: input.value.trim()
+        }));
 
-      // Здесь можно отправить ответы на сервер или обработать их
-      // Например, через Telegram Mini Apps API
-      const resultElement = document.getElementById('result');
-      resultElement.textContent = `Ответы отправлены: ${answers.join(', ')}`;
+        // 2. Проверяем заполнение всех полей
+        if (answers.some(item => item.answer === '')) {
+          alert('Пожалуйста, заполните все поля!');
+          return;
+        }
 
-      // Пример отправки данных в Telegram бота
-      if (window.Telegram && window.Telegram.WebApp) {
-        Telegram.WebApp.sendData(JSON.stringify(answers));
-      } else {
-        alert('Ответы отправлены: ' + answers.join(', '));
+        // 3. Получаем дополнительные данные из WebApp
+        const webAppData = {
+          user_id: Telegram.WebApp.initDataUnsafe.user.id,
+          answers: answers
+        };
+        alert(Telegram.WebApp.initDataUnsafe.user.id)
+        // 4. Анимация исчезновения заданий
+         const tasksCard = document.getElementById('tasks-card');
+          const sendButton = document.querySelector('.send-button');
+
+          // Запускаем анимацию
+          [tasksCard, sendButton].forEach(element => {
+            element.style.opacity = '0';
+            element.style.transform = 'translateY(-20px)';
+          });
+
+          // Ждем завершения анимации (500ms)
+          await new Promise(resolve => setTimeout(resolve, 500));
+
+          // 5. Показываем сообщение об успехе
+          const successMessage = document.getElementById('success-message');
+          successMessage.classList.add('show');
+
+          // 6. Закрываем мини-приложение через 2 секунды
+          setTimeout(() => {
+            if (window.Telegram?.WebApp?.close) {
+              Telegram.WebApp.close();
+            }
+          }, 2000);
+
+        // 5. Отправка данных через Telegram WebApp
+         Telegram.WebApp.sendData(JSON.stringify(webAppData));
+
+          // Показываем сообщение об успехе
+         document.getElementById('success-message').classList.add('show');
+
+          // Закрываем мини-приложение через 2 секунды
+         setTimeout(() => Telegram.WebApp.close(), 2000);
+
+
+      } catch (error) {
+        console.error('Ошибка:', error);
+        alert(`Ошибка: ${error.message}`);
       }
     }
   </script>

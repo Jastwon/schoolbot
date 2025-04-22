@@ -21,18 +21,10 @@ class AsyncORM:
             await session.flush()
             await session.commit()
 
-    @staticmethod
-    async def insert_tasks(message, data):
-        async with async_session_factory() as session:
-            new_task = Tasks(
-                user_id=message.from_user.id,
-                text=data['task_text'],
-                age=data['age'],
-                period=data['period'],
-                correct_answer=message.text,  # Сохраняем правильный ответ
-            )
-            session.add(new_task)
-            await session.commit() 
+
+
+
+
 
 
     @staticmethod
@@ -73,6 +65,25 @@ class AsyncORM:
                 return None
 
     @staticmethod
+    async def get_teachers_by_student(student_id: int):
+        async with async_session_factory() as session:
+            query = select(Users).where(Users.user_id == student_id)
+            res = await session.execute(query)
+            users = res.one()
+
+            query = select(Users).where(Users.role == "teacher")
+            res = await session.execute(query)
+            all_teachers = res.scalars().all()
+            teachers = list()
+
+            for teacher in all_teachers:
+                if str(teacher.id) in users[0].ref:
+                    teachers.append(teacher)
+
+            return teachers
+
+
+    @staticmethod
     async def get_users_by_ref(ref: str):
         async with async_session_factory() as session:
             query = select(Users).where(Users.role == "student")
@@ -108,6 +119,27 @@ class AsyncORM:
             user.ref = user.ref.replace(f"{teacher_id}", "")
             print(user.ref)
             await session.commit()
+
+    @staticmethod
+    async def insert_tasks(user_id: int, correct_answer: str, data):
+        async with async_session_factory() as session:
+            new_task = Tasks(
+                user_id=user_id,
+                text=data['task_text'],
+                age=data['age'],
+                period=data['period'],
+                correct_answer=correct_answer,  # Сохраняем правильный ответ
+            )
+            session.add(new_task)
+            await session.commit()
+
+    @staticmethod
+    async def get_tasks_by_id(teacher_id: int, age: str, period: str):
+        async with async_session_factory() as session:
+            query = select(Tasks).filter_by(user_id=teacher_id, age=age, period=period)
+            res = await session.execute(query)
+            tasks = res.scalars().all()
+            return tasks
 
 
 

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <title>School Helper - Учитель</title>
+  <style>
+    :root {
+      --primary-color: #1E90FF;
+      --accent-color: #FFA500;
+      --background-light: #F5F5F5;
+      --text-color: #333333;
+      --border-radius: 12px;
+      --box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    body {
+      font-family: 'Roboto', sans-serif;
+      background-color: var(--background-light);
+      color: var(--text-color);
+      margin: 0;
+      padding: 16px;
+      touch-action: none;
+    }
+
+    h1 {
+      color: var(--primary-color);
+      text-align: center;
+      margin: 0;
+      font-size: 28px;
+    }
+
+    .subtitle {
+      text-align: center;
+      font-size: 14px;
+      color: #666;
+      margin-top: 8px;
+    }
+
+    .card {
+      background-color: white;
+      border-radius: var(--border-radius);
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: var(--box-shadow);
+    }
+
+    button {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      box-shadow: var(--box-shadow);
+      width: 100%;
+      font-size: 16px;
+      transition: background-color 0.3s ease;
+    }
+
+    button:hover {
+      background-color: var(--accent-color);
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>School Helper</h1>
+    <p class="subtitle">Данный бот помогает сдавать академические задолжности</p>
+
+    <!-- Карточка с кнопкой "Мои ученики" -->
+    <div class="card">
+      <button onclick="goToStudents()">Мои ученики</button>
+    </div>
+    <div class="card">
+        <button onclick="goToAddTasks()">Добавить задания</button>
+    </div>
+  </div>
+
+  <script>
+    // Функция для перехода на страницу учеников
+    function goToStudents() {
+      const teacherId = Telegram.WebApp.initDataUnsafe.user.id; // Получаем ID учителя из Telegram
+      window.location.href = `/teacher/my_students?teacher_id=${teacherId}&initData=${Telegram.WebApp.initData}`;
+    }
+
+    // Функция для перехода на страницу для добавления задания
+    function goToAddTasks() {
+      const teacherId = Telegram.WebApp.initDataUnsafe.user.id; // Получаем ID учителя из Telegram
+      window.location.href = `/teacher/send_tasks?initData=${Telegram.WebApp.initData}`;
+    }
+  </script>
+</body>
+</html>
